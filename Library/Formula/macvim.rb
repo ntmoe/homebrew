@@ -6,6 +6,11 @@ class Macvim < Formula
   version '7.3-64'
   md5 '5bdc0bc618b3179130f846f8d0f81283'
   head 'https://github.com/b4winckler/macvim.git', :branch => 'master'
+  
+  def patches
+    # Apply breakindent patch
+    "https://retracile.net/raw-attachment/blog/2011/08/23/21.30/vim-7.3.285-breakindent.patch"
+  end
 
   def options
   [
