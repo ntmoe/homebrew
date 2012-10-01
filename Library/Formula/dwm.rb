@@ -1,10 +1,12 @@
 require 'formula'
 
 class Dwm < Formula
-  url 'http://dl.suckless.org/dwm/dwm-5.9.tar.gz'
+  url 'http://dl.suckless.org/dwm/dwm-6.0.tar.gz'
   homepage 'http://dwm.suckless.org/'
-  md5 '2799f885c05817ca112d521bb247f797'
+  sha1 '35346f873a27f219ae266594b3690407f95d06ef'
   head 'http://hg.suckless.org/dwm'
+
+  depends_on :x11
 
   def install
     # The dwm default quit keybinding Mod1-Shift-q collides with
@@ -13,7 +15,7 @@ class Dwm < Formula
     '{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },',
     '{ MODKEY|ControlMask,           XK_q,      quit,           {0} },'
     inreplace 'dwm.1', '.B Mod1\-Shift\-q', '.B Mod1\-Control\-q'
-    system "make PREFIX=#{prefix} install"
+    system "make", "PREFIX=#{prefix}", "install"
   end
 
   def caveats

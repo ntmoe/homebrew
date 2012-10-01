@@ -1,18 +1,22 @@
 require 'formula'
 
 class Eina < Formula
-  url 'http://download.enlightenment.org/releases/eina-1.0.1.tar.gz'
   homepage 'http://trac.enlightenment.org/e/wiki/Eina'
-  md5 'd302a5b981d8e140e64d2943c5f41bdc'
-  head 'http://svn.enlightenment.org/svn/e/trunk/eina/', :using => :svn
+  url 'http://download.enlightenment.org/releases/eina-1.2.1.tar.gz'
+  sha1 '6a96fe66cdfc26681a38d5d666898fc3e7ab7cbe'
+
+  head 'http://svn.enlightenment.org/svn/e/trunk/eina/'
 
   depends_on 'pkg-config' => :build
 
+  if build.head?
+    depends_on :autoconf
+    depends_on :automake
+    depends_on :libtool
+  end
+
   def install
-    # hack to allow building with current trunk, will be made obsolete after 1.1
-    # is released: http://comments.gmane.org/gmane.comp.window-managers.enlightenment.devel/30780
-    inreplace 'configure.ac', 'm4_define([v_mic], [999])', 'm4_define([v_mic], [99])' if ARGV.build_head?
-    system "./autogen.sh" if ARGV.build_head?
+    system "./autogen.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     system "make install"

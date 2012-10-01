@@ -1,9 +1,9 @@
 require 'formula'
 
 class Gnupg2 < Formula
-  url 'ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.0.18.tar.bz2'
   homepage 'http://www.gnupg.org/'
-  sha1 '5ec2f718760cc3121970a140aeea004b64545c46'
+  url 'ftp://ftp.gnupg.org/gcrypt/gnupg/gnupg-2.0.19.tar.bz2'
+  sha1 '190c09e6688f688fb0a5cf884d01e240d957ac1f'
 
   depends_on 'libgpg-error'
   depends_on 'libgcrypt'
@@ -15,15 +15,14 @@ class Gnupg2 < Formula
   depends_on 'dirmngr' => :optional
   depends_on 'libusb-compat' => :optional
 
-  def patches
-    # fix runtime data location
-    # change package name to 'gnupg2' to avoid conflicts
-    # fix tests for external gpg-agent
-    DATA
-  end
+  # Fix hardcoded runtime data location
+  # upstream: http://git.gnupg.org/cgi-bin/gitweb.cgi?p=gnupg.git;h=c3f08dc
+  # Adjust package name to fit our scheme of packaging both gnupg 1.x and
+  # 2.x, and gpg-agent separately, and adjust tests to fit this scheme
+  def patches; DATA; end
 
   def install
-    (var+'run').mkpath
+    (var/'run').mkpath
 
     # so we don't use Clang's internal stdint.h
     ENV['gl_cv_absolute_stdint_h'] = '/usr/include/stdint.h'
@@ -31,14 +30,15 @@ class Gnupg2 < Formula
     system "./configure", "--prefix=#{prefix}",
                           "--disable-dependency-tracking",
                           "--enable-symcryptrun",
-                          "--disable-agent"
+                          "--disable-agent",
+                          "--with-agent-pgm=#{HOMEBREW_PREFIX}/bin/gpg-agent"
     system "make"
     system "make check"
     system "make install"
 
-    # conflicts with a manpage from the 1.x formula, and
+    # Conflicts with a manpage from the 1.x formula, and
     # gpg-zip isn't installed by this formula anyway
-    rm man1+'gpg-zip.1'
+    rm man1/'gpg-zip.1'
   end
 end
 
@@ -58,7 +58,7 @@ index 5f2e31e..d797b68 100644
  
 
 diff --git a/configure b/configure
-index 3df3900..b102aec 100755
+index 829fc79..684213e 100755
 --- a/configure
 +++ b/configure
 @@ -558,8 +558,8 @@ MFLAGS=
@@ -69,12 +69,12 @@ index 3df3900..b102aec 100755
 -PACKAGE_TARNAME='gnupg'
 +PACKAGE_NAME='gnupg2'
 +PACKAGE_TARNAME='gnupg2'
- PACKAGE_VERSION='2.0.18'
- PACKAGE_STRING='gnupg 2.0.18'
+ PACKAGE_VERSION='2.0.19'
+ PACKAGE_STRING='gnupg 2.0.19'
  PACKAGE_BUGREPORT='http://bugs.gnupg.org'
 
 diff --git a/tests/openpgp/Makefile.in b/tests/openpgp/Makefile.in
-index ab2f10f..1d3cace 100644
+index 1a617e7..1af2d4b 100644
 --- a/tests/openpgp/Makefile.in
 +++ b/tests/openpgp/Makefile.in
 @@ -286,11 +286,11 @@ GPG_IMPORT = ../../g10/gpg2 --homedir . \
@@ -86,8 +86,8 @@ index ab2f10f..1d3cace 100644
                  ../../tools/gpg-connect-agent
  
  TESTS_ENVIRONMENT = GNUPGHOME=$(abs_builddir) GPG_AGENT_INFO= LC_ALL=C \
--		    ../../agent/gpg-agent --quiet --daemon sh 
-+		    gpg-agent --quiet --daemon sh 
+-		    ../../agent/gpg-agent --quiet --daemon sh
++		    gpg-agent --quiet --daemon sh
  
  TESTS = version.test mds.test \
  	decrypt.test decrypt-dsa.test \

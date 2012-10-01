@@ -1,9 +1,9 @@
 require 'formula'
 
 class FreeradiusServer < Formula
-  url 'ftp://ftp.freeradius.org/pub/freeradius/freeradius-server-2.1.11.tar.gz'
+  url 'ftp://ftp.freeradius.org/pub/freeradius/freeradius-server-2.1.12.tar.gz'
   homepage 'http://freeradius.org/'
-  md5 '49904610a77d978395532b5647c7e141'
+  sha1 '22b5d9e59369b8a3caa3c778871bf579ae7a8a9c'
 
   skip_clean :all
 
