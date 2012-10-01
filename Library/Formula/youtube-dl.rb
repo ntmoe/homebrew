@@ -1,8 +1,13 @@
 require 'formula'
 
-class YoutubeDl < ScriptFileFormula
-  url 'https://github.com/rg3/youtube-dl/raw/2012.01.08b/youtube-dl'
+class YoutubeDl < Formula
   homepage 'http://rg3.github.com/youtube-dl/'
-  sha256 '5bfd6ed0e692c9047c81498b70dbe4929a2079c2dfa4018862bb3d34175e988c'
-  version '2012.01.08b'
+  url 'https://github.com/rg3/youtube-dl/tarball/2012.09.27/youtube-dl'
+  sha256 '45e88c1a5b81e633bddd43d5363e7ade92af2eeb534c37a5170f4b68d73605ea'
+  version '2012.09.27'
+
+  def install
+    system "make", "PREFIX=#{prefix}"
+    bin.install 'youtube-dl'
+  end
 end
