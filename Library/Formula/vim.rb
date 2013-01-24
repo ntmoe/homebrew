@@ -4,14 +4,14 @@ class Vim < Formula
   homepage 'http://www.vim.org/'
   # Get stable versions from hg repo instead of downloading an increasing
   # number of separate patches.
-  url 'https://vim.googlecode.com/hg/', :tag => 'v7-3-780'
-  version '7.3.780'
+  url 'https://vim.googlecode.com/hg/', :tag => 'v7-3-682'
+  version '7.3.682'
 
   head 'https://vim.googlecode.com/hg/'
   
   def patches
     # Apply breakindent patch
-    "https://retracile.net/raw-attachment/blog/2011/08/23/21.30/vim-7.3.285-breakindent.patch"
+    "https://retracile.net/raw-attachment/blog/2012/12/21/17.30/vim-7.3.682-breakindent.patch"
   end
 
   env :std # To find interpreters
