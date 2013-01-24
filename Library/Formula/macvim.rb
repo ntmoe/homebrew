@@ -7,6 +7,11 @@ class Macvim < Formula
   sha1 'd11696f7089688fa96a45fc57410c60f6ca5a394'
 
   head 'https://github.com/b4winckler/macvim.git', :branch => 'master'
+  
+  def patches
+    # Apply breakindent patch
+    "https://retracile.net/raw-attachment/blog/2011/08/23/21.30/vim-7.3.285-breakindent.patch"
+  end
 
   option "custom-icons", "Try to generate custom document icons"
   option "override-system-vim", "Override system vim"
