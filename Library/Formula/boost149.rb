@@ -1,15 +1,14 @@
 require 'formula'
 
 class UniversalPython < Requirement
+  satisfy { archs_for_command("python").universal? }
+
   def message; <<-EOS.undent
     A universal build was requested, but Python is not a universal build
 
     Boost compiles against the Python it finds in the path; if this Python
     is not a universal build then linking will likely fail.
     EOS
-  end
-  def satisfied?
-    archs_for_command("python").universal?
   end
 end
 
@@ -20,6 +19,8 @@ class Boost149 < Formula
 
   keg_only "Boost 1.49 is provided for software that doesn't compile against newer versions."
 
+  env :userpaths
+
   option :universal
   option 'with-mpi', 'Enable MPI support'
   option 'without-python', 'Build without Python'
@@ -27,6 +28,7 @@ class Boost149 < Formula
 
   depends_on UniversalPython.new if build.universal? and not build.include? "without-python"
   depends_on "icu4c" if build.include? "with-icu"
+  depends_on MPIDependency.new(:cc, :cxx) if build.include? "with-mpi"
 
   fails_with :llvm do
     build 2335

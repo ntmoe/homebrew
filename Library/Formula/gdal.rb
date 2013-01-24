@@ -117,7 +117,7 @@ class Gdal < Formula
       "--with-gif=#{HOMEBREW_PREFIX}",
       "--with-libtiff=#{HOMEBREW_PREFIX}",
       "--with-geotiff=#{HOMEBREW_PREFIX}",
-      "--with-sqlite3=#{HOMEBREW_PREFIX}",
+      "--with-sqlite3=#{Formula.factory('sqlite').opt_prefix}",
       "--with-freexl=#{HOMEBREW_PREFIX}",
       "--with-spatialite=#{HOMEBREW_PREFIX}",
       "--with-geos=#{HOMEBREW_PREFIX}/bin/geos-config",
@@ -210,10 +210,12 @@ class Gdal < Formula
   def install
     # Linking flags for SQLite are not added at a critical moment when the GDAL
     # library is being assembled. This causes the build to fail due to missing
-    # symbols.
+    # symbols. Also, ensure Homebrew SQLite is used so that Spatialite is
+    # functional.
     #
     # Fortunately, this can be remedied using LDFLAGS.
-    ENV.append 'LDFLAGS', '-lsqlite3'
+    sqlite = Formula.factory 'sqlite'
+    ENV.append 'LDFLAGS', "-L#{sqlite.opt_prefix}/lib -lsqlite3"
     # Needed by libdap.
     ENV.append 'CPPFLAGS', '-I/usr/include/libxml2' if complete?
 
