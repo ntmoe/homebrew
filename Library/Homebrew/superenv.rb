@@ -28,7 +28,7 @@ class << ENV
   alias_method :x11?, :x11
 
   def reset
-    %w{CC CXX CPP OBJC MAKE LD
+    %w{CC CXX OBJC OBJCXX CPP MAKE LD
       CFLAGS CXXFLAGS OBJCFLAGS OBJCXXFLAGS LDFLAGS CPPFLAGS
       MACOS_DEPLOYMENT_TARGET SDKROOT
       CMAKE_PREFIX_PATH CMAKE_INCLUDE_PATH CMAKE_FRAMEWORK_PATH}.
@@ -43,19 +43,21 @@ class << ENV
     check
     ENV['CC'] = 'cc'
     ENV['CXX'] = 'c++'
+    ENV['OBJC'] = 'cc'
+    ENV['OBJCXX'] = 'c++'
     ENV['DEVELOPER_DIR'] = determine_developer_dir # effects later settings
     ENV['MAKEFLAGS'] ||= "-j#{determine_make_jobs}"
     ENV['PATH'] = determine_path
     ENV['PKG_CONFIG_PATH'] = determine_pkg_config_path
     ENV['HOMEBREW_CC'] = determine_cc
     ENV['HOMEBREW_CCCFG'] = determine_cccfg
+    ENV['HOMEBREW_BREW_FILE'] = HOMEBREW_BREW_FILE
     ENV['HOMEBREW_SDKROOT'] = "#{MacOS.sdk_path}" if MacSystem.xcode43_without_clt?
     ENV['CMAKE_PREFIX_PATH'] = determine_cmake_prefix_path
     ENV['CMAKE_FRAMEWORK_PATH'] = "#{MacOS.sdk_path}/System/Library/Frameworks" if MacSystem.xcode43_without_clt?
     ENV['CMAKE_INCLUDE_PATH'] = determine_cmake_include_path
     ENV['CMAKE_LIBRARY_PATH'] = determine_cmake_library_path
     ENV['ACLOCAL_PATH'] = determine_aclocal_path
-    ENV['VERBOSE'] = '1' if ARGV.verbose?
   end
 
   def check
@@ -120,7 +122,7 @@ class << ENV
     # we put our paths before X because we dupe some of the X libraries
     paths << "#{MacSystem.x11_prefix}/lib/pkgconfig" << "#{MacSystem.x11_prefix}/share/pkgconfig" if x11?
     # Mountain Lion no longer ships some .pcs; ensure we pick up our versions
-    paths << "#{HOMEBREW_REPOSITORY}/Library/Homebrew/pkgconfig" if MacOS.version >= :mountain_lion
+    paths << "#{HOMEBREW_REPOSITORY}/Library/ENV/pkgconfig/mountain_lion" if MacOS.version >= :mountain_lion
     paths.to_path_s
   end
 
@@ -222,16 +224,16 @@ class << ENV
   end
   alias_method :j1, :deparallelize
   def gcc
-    ENV['CC'] = ENV['HOMEBREW_CC'] = "gcc"
-    ENV['CXX'] = "g++"
+    ENV['CC'] = ENV['OBJC'] = ENV['HOMEBREW_CC'] = "gcc"
+    ENV['CXX'] = ENV['OBJCXX'] = "g++"
   end
   def llvm
-    ENV['CC'] = ENV['HOMEBREW_CC'] = "llvm-gcc"
-    ENV['CXX'] = "g++"
+    ENV['CC'] = ENV['OBJC'] = ENV['HOMEBREW_CC'] = "llvm-gcc"
+    ENV['CXX'] = ENV['OBJCXX'] = "g++"
   end
   def clang
-    ENV['CC'] = ENV['HOMEBREW_CC'] = "clang"
-    ENV['CXX'] = "clang++"
+    ENV['CC'] = ENV['OBJC'] = ENV['HOMEBREW_CC'] = "clang"
+    ENV['CXX'] = ENV['OBJCXX'] = "clang++"
   end
   def make_jobs
     ENV['MAKEFLAGS'] =~ /-\w*j(\d)+/
@@ -288,7 +290,7 @@ module MacSystem extend self
   end
 
   def x11_prefix
-    @x11_prefix ||= %W[/usr/X11 /opt/X11
+    @x11_prefix ||= %W[/opt/X11 /usr/X11
       #{MacOS.sdk_path}/usr/X11].find{|path| File.directory? "#{path}/include" }
   end
 

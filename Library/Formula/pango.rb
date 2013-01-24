@@ -38,18 +38,20 @@ class Pango < Formula
       --disable-introspection
     ]
 
-    args << '--with-x' unless build.include? 'without-x'
+    if build.include? 'without-x'
+      args << '--without-x'
+    else
+      args << '--with-x'
+    end
 
     system "./configure", *args
     system "make"
     system "make install"
   end
 
-  def test
-    mktemp do
-      system "#{bin}/pango-view", "-t", "test-image",
-                                  "--waterfall", "--rotate=10",
-                                  "--annotate=1", "--header"
-    end
+  test do
+    system "#{bin}/pango-view", "-t", "test-image",
+                                "--waterfall", "--rotate=10",
+                                "--annotate=1", "--header"
   end
 end

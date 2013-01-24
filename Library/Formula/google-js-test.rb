@@ -1,19 +1,17 @@
 require 'formula'
 
 class NeedsSnowLeopard < Requirement
+  satisfy MacOS.version >= :snow_leopard
+
   def message
     "Google JS Test requires Mac OS X 10.6 (Snow Leopard) or newer."
-  end
-
-  def satisfied?
-    MacOS.version >= :snow_leopard
   end
 end
 
 class GoogleJsTest < Formula
   homepage 'http://code.google.com/p/google-js-test/'
-  url 'http://google-js-test.googlecode.com/files/gjstest-1.0.7.tar.bz2'
-  sha1 '8580cfe9c3ed2eca6e3c076bfc321048a6e4dd64'
+  url 'http://google-js-test.googlecode.com/files/gjstest-1.0.8.tar.bz2'
+  sha1 '2209dd0c700f9420e29a844920f8614e3d97156d'
 
   depends_on NeedsSnowLeopard.new
   depends_on 'gflags'

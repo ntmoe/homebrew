@@ -10,6 +10,9 @@ class Maxima < Formula
   depends_on 'gnuplot'
   depends_on 'rlwrap'
 
+  # required for maxima help(), describe(), "?" and "??" lisp functionality
+  skip_clean 'share/info'
+
   def patches
     # fixes 3468021: imaxima.el uses incorrect tmp directory on OS X:
     # https://sourceforge.net/tracker/?func=detail&aid=3468021&group_id=4933&atid=104933
@@ -20,11 +23,13 @@ class Maxima < Formula
     ENV.deparallelize
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--mandir=#{man}", "--infodir=#{info}",
-                          "--enable-sbcl", "--enable-gettext"
-    system "make"
-    system "make check"
-    system "make install"
+                          "--enable-sbcl",
+                          "--enable-gettext"
+    # Per build instructions
+    ENV['LANG'] = 'C'
+    system 'make'
+    system 'make check'
+    system 'make install'
   end
 
   def test

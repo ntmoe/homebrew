@@ -11,13 +11,14 @@ require 'extend/set'
 
 class Formula
   include FileUtils
+  extend BuildEnvironmentDSL
 
   attr_reader :name, :path, :homepage, :downloader
   attr_reader :stable, :bottle, :devel, :head, :active_spec
 
-  # The build folder, usually in /tmp.
-  # Will only be non-nil during the stage method.
-  attr_reader :buildpath
+  # The current working directory during builds and tests.
+  # Will only be non-nil inside #stage and #test.
+  attr_reader :buildpath, :testpath
 
   # Homebrew determines the name
   def initialize name='__UNKNOWN__', path=nil
@@ -72,16 +73,11 @@ class Formula
 
   # if the dir is there, but it's empty we consider it not installed
   def installed?
-    return installed_prefix.children.length > 0
-  rescue
-    return false
+    installed_prefix.children.length > 0 rescue false
   end
 
   def explicitly_requested?
-    # `ARGV.formulae` will throw an exception if it comes up with an empty list.
-    # FIXME: `ARGV.formulae` shouldn't be throwing exceptions, see issue #8823
-   return false if ARGV.named.empty?
-   ARGV.formulae.include? self
+    ARGV.formulae.include?(self) rescue false
   end
 
   def linked_keg
@@ -118,23 +114,23 @@ class Formula
   end
   def rack; prefix.parent end
 
-  def bin;     prefix+'bin'            end
-  def doc;     prefix+'share/doc'+name end
-  def include; prefix+'include'        end
-  def info;    prefix+'share/info'     end
-  def lib;     prefix+'lib'            end
-  def libexec; prefix+'libexec'        end
-  def man;     prefix+'share/man'      end
-  def man1;    man+'man1'              end
-  def man2;    man+'man2'              end
-  def man3;    man+'man3'              end
-  def man4;    man+'man4'              end
-  def man5;    man+'man5'              end
-  def man6;    man+'man6'              end
-  def man7;    man+'man7'              end
-  def man8;    man+'man8'              end
-  def sbin;    prefix+'sbin'           end
-  def share;   prefix+'share'          end
+  def bin;     prefix+'bin'     end
+  def doc;     share+'doc'+name end
+  def include; prefix+'include' end
+  def info;    share+'info'     end
+  def lib;     prefix+'lib'     end
+  def libexec; prefix+'libexec' end
+  def man;     share+'man'      end
+  def man1;    man+'man1'       end
+  def man2;    man+'man2'       end
+  def man3;    man+'man3'       end
+  def man4;    man+'man4'       end
+  def man5;    man+'man5'       end
+  def man6;    man+'man6'       end
+  def man7;    man+'man7'       end
+  def man8;    man+'man8'       end
+  def sbin;    prefix+'sbin'    end
+  def share;   prefix+'share'   end
 
   # configuration needs to be preserved past upgrades
   def etc; HOMEBREW_PREFIX+'etc' end
@@ -142,10 +138,13 @@ class Formula
   def var; HOMEBREW_PREFIX+'var' end
 
   # override this to provide a plist
-  def startup_plist; nil; end
+  def plist; nil; end
+  alias :startup_plist :plist
   # plist name, i.e. the name of the launchd service
   def plist_name; 'homebrew.mxcl.'+name end
   def plist_path; prefix+(plist_name+'.plist') end
+  def plist_manual; self.class.plist_manual end
+  def plist_startup; self.class.plist_startup end
 
   def build
     self.class.build
@@ -224,21 +223,10 @@ class Formula
         # so load any deps before this point! And exit asap afterwards
         yield self
       rescue RuntimeError, SystemCallError => e
-        if not ARGV.debug?
-          %w(config.log CMakeCache.txt).each do |fn|
-            (HOMEBREW_LOGS/name).install(fn) if File.file?(fn)
-          end
-          raise
+        %w(config.log CMakeCache.txt).each do |fn|
+          (HOMEBREW_LOGS/name).install(fn) if File.file?(fn)
         end
-
-        onoe e.inspect
-        puts e.backtrace unless e.kind_of? BuildError
-        ohai "Rescuing build..."
-        puts "When you exit this shell Homebrew will attempt to finalise the installation."
-        puts "If nothing is installed or the shell exits with a non-zero error code,"
-        puts "Homebrew will abort. The installation prefix is:"
-        puts prefix
-        interactive_shell self
+        raise
       end
     end
   end
@@ -366,6 +354,11 @@ class Formula
       end
 
       install_type = :from_url
+    elsif name.match bottle_regex
+      bottle_filename = Pathname(name).realpath
+      name = bottle_filename.basename.to_s.rpartition('-').first
+      path = Formula.path(name)
+      install_type = :from_local_bottle
     else
       name = Formula.canonical_name(name)
 
@@ -406,6 +399,14 @@ class Formula
       raise LoadError
     end
 
+    if install_type == :from_local_bottle
+      formula = klass.new(name)
+      formula.downloader.local_bottle_path = bottle_filename
+      return formula
+    end
+
+    raise NameError if !klass.ancestors.include? Formula
+
     return klass.new(name) if install_type == :from_name
     return klass.new(name, path.to_s)
   rescue NoMethodError
@@ -435,7 +436,7 @@ class Formula
   def requirements; self.class.dependencies.requirements; end
 
   def env
-    @env ||= BuildEnvironment.new(self.class.environments)
+    @env ||= self.class.env
   end
 
   def conflicts
@@ -552,17 +553,18 @@ protected
       unless $?.success?
         unless ARGV.verbose?
           f.flush
-          Kernel.system "/usr/bin/tail -n 5 #{logfn}"
+          Kernel.system "/usr/bin/tail", "-n", "5", logfn
         end
         f.puts
         require 'cmd/--config'
         Homebrew.write_build_config(f)
-        raise BuildError.new(self, cmd, args, $?)
+        raise ErrorDuringExecution
       end
     end
-
+  rescue ErrorDuringExecution => e
+    raise BuildError.new(self, cmd, args, $?)
   ensure
-    f.close if f
+    f.close if f and not f.closed?
     removed_ENV_variables.each do |key, value|
       ENV[key] = value
     end if removed_ENV_variables
@@ -581,6 +583,20 @@ public
   # For FormulaInstaller.
   def verify_download_integrity fn
     @active_spec.verify_download_integrity(fn)
+  end
+
+  def test
+    ret = nil
+    mktemp do
+      @testpath = Pathname.pwd
+      ret = instance_eval(&self.class.test)
+      @testpath = nil
+    end
+    ret
+  end
+
+  def test_defined?
+    not self.class.instance_variable_get(:@test_defined).nil?
   end
 
 private
@@ -629,7 +645,12 @@ private
   end
 
   def self.method_added method
-    raise 'You cannot override Formula.brew' if method == :brew
+    case method
+    when :brew
+      raise "You cannot override Formula#brew"
+    when :test
+      @test_defined = true
+    end
   end
 
   class << self
@@ -646,6 +667,7 @@ private
     end
 
     attr_rw :homepage, :keg_only_reason, :skip_clean_all, :cc_failures
+    attr_rw :plist_startup, :plist_manual
 
     Checksum::TYPES.each do |cksum|
       class_eval %Q{
@@ -706,14 +728,6 @@ private
       @stable.mirror(val)
     end
 
-    def environments
-      @environments ||= []
-    end
-
-    def env *settings
-      environments.concat [settings].flatten
-    end
-
     def dependencies
       @dependencies ||= DependencyCollector.new
     end
@@ -730,20 +744,13 @@ private
       build.add name, description
     end
 
-    def conflicts_with formula, opts={}
-      message = <<-EOS.undent
-      #{formula} cannot be installed alongside #{name.downcase}.
-      EOS
-      message << "This is because #{opts[:because]}\n" if opts[:because]
-      unless ARGV.force? then message << <<-EOS.undent
-        Please `brew unlink #{formula}` before continuing. Unlinking removes
-        the formula's symlinks from #{HOMEBREW_PREFIX}. You can link the
-        formula again after the install finishes. You can --force this install
-        but the build may fail or cause obscure side-effects in the end-binary.
-        EOS
-      end
+    def plist_options options
+      @plist_startup = options[:startup]
+      @plist_manual = options[:manual]
+    end
 
-      dependencies.add ConflictRequirement.new(formula, message)
+    def conflicts_with formula, opts={}
+      dependencies.add ConflictRequirement.new(formula, name, opts)
     end
 
     def skip_clean *paths
@@ -781,6 +788,12 @@ private
       else
         CompilerFailure.new(compiler)
       end
+    end
+
+    def test &block
+      return @test unless block_given?
+      @test_defined = true
+      @test = block
     end
   end
 end

@@ -5,9 +5,10 @@ require 'formula'
 
 class Cairo < Formula
   homepage 'http://cairographics.org/'
-  url 'http://cairographics.org/releases/cairo-1.12.4.tar.xz'
-  mirror 'http://ftp-nyc.osuosl.org/pub/gentoo/distfiles/cairo-1.12.4.tar.xz'
-  sha256 'a467b2e1f04bfd3f848370ce5e82cfe0a7f712bac05a04d133bc34c94f677a28'
+  url 'http://cairographics.org/releases/cairo-1.12.10.tar.xz'
+  mirror 'http://ftp-nyc.osuosl.org/pub/gentoo/distfiles/cairo-1.12.10.tar.xz'
+  mirror 'ftp://anduin.linuxfromscratch.org/BLFS/conglomeration/cairo/cairo-1.12.10.tar.xz'
+  sha256 'f1581aef210f6caa9cf42875fb66ab3b47a32db9436bdfa9913b9bbd5034b03b'
 
   keg_only :provided_pre_mountain_lion
 
@@ -31,7 +32,12 @@ class Cairo < Formula
       --prefix=#{prefix}
     ]
 
-    args << '--with-x' unless build.include? 'without-x'
+    if build.include? 'without-x'
+      args << '--enable-xlib=no' << '--enable-xlib-xrender=no'
+    else
+      args << '--with-x'
+    end
+
     args << '--enable-xcb=no' if MacOS.version == :leopard
 
     system "./configure", *args
