@@ -2,10 +2,10 @@ require 'formula'
 
 class PhoronixTestSuite < Formula
   homepage 'http://www.phoronix-test-suite.com/'
-  url 'http://www.phoronix-test-suite.com/download.php?file=phoronix-test-suite-4.2.0'
-  sha1 'f2a42a3516cd1c0efa0aa117c80f942ffb5a0456'
+  url 'http://www.phoronix-test-suite.com/download.php?file=phoronix-test-suite-5.2.0'
+  sha1 'ed5025e2f1b8f0fe1fc2f725979b502d1fcd7835'
 
-  def patches; DATA; end
+  patch :DATA
 
   def install
     system "./install-sh", prefix
@@ -32,7 +32,7 @@ __END__
  
  cd documentation/
  cp -r * $DESTDIR$INSTALL_PREFIX/share/doc/phoronix-test-suite/
-@@ -67,13 +67,13 @@
+@@ -67,7 +67,7 @@
  rm -rf $DESTDIR$INSTALL_PREFIX/share/doc/phoronix-test-suite/man-pages/
  
  cp documentation/man-pages/*.1 $DESTDIR$INSTALL_PREFIX/share/man/man1/
@@ -41,13 +41,6 @@ __END__
  cp pts-core/static/images/phoronix-test-suite.png $DESTDIR$INSTALL_PREFIX/share/icons/hicolor/48x48/apps/phoronix-test-suite.png
  cp pts-core/static/phoronix-test-suite.desktop $DESTDIR$INSTALL_PREFIX/share/applications/
  cp pts-core/static/phoronix-test-suite-launcher.desktop $DESTDIR$INSTALL_PREFIX/share/applications/
- 
- rm -f $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite/pts/etc/scripts/package-build-*
--cp -r pts-core/ $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite/
-+cp -r pts-core $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite
- rm -f $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite/pts-core/static/phoronix-test-suite.desktop
- rm -f $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite/pts-core/static/phoronix-test-suite-launcher.desktop
- rm -f $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite/pts-core/openbenchmarking.org/openbenchmarking-mime.xml
 @@ -88,7 +88,7 @@
  # sed 's:\$url = PTS_PATH . \"documentation\/index.html\";:\$url = \"'"$INSTALL_PREFIX"'\/share\/doc\/packages\/phoronix-test-suite\/index.html\";:g' pts-core/commands/gui_gtk.php > $DESTDIR$INSTALL_PREFIX/share/phoronix-test-suite/pts-core/commands/gui_gtk.php
  

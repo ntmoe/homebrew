@@ -1,29 +1,24 @@
 require 'formula'
 
 class Openvpn < Formula
-  homepage 'http://openvpn.net/'
-  url 'http://build.openvpn.net/downloads/releases/openvpn-2.2.2.tar.gz'
-  mirror 'http://swupdate.openvpn.org/community/releases/openvpn-2.2.2.tar.gz'
-  sha256 '54ca8b260e2ea3b26e84c2282ccb5f8cb149edcfd424b686d5fb22b8dbbeac00'
-
-  devel do
-    version '2.3-rc1'
-
-    url 'http://build.openvpn.net/downloads/releases/openvpn-2.3_rc1.tar.gz'
-    mirror 'http://swupdate.openvpn.org/community/releases/openvpn-2.3_rc1.tar.gz'
-    sha256 '5628423b18a0a05bff2169630e030bc4a440d0e92b820a1b78bc16357d5306e8'
-  end
+  homepage 'http://openvpn.net/index.php/download/community-downloads.html'
+  url 'http://build.openvpn.net/downloads/releases/openvpn-2.3.4.tar.gz'
+  mirror 'http://swupdate.openvpn.org/community/releases/openvpn-2.3.4.tar.gz'
+  sha256 'af506d5f48568fa8d2f2435cb3fad35f9a9a8f263999ea6df3ba296960cec85a'
 
   depends_on 'lzo'
-
-  # This patch fixes compilation on Lion
-  # There is a long history of confusion between these two consts:
-  # http://www.google.com/search?q=SOL_IP+IPPROTO_IP
-  def patches
-    DATA unless build.devel?
-  end
+  depends_on 'tuntap'
 
   def install
+    # pam_appl header is installed in a different location on Leopard
+    # and older; reported upstream https://community.openvpn.net/openvpn/ticket/326
+    if MacOS.version < :snow_leopard
+      %w[auth-pam.c pamdl.c].each do |file|
+        inreplace "src/plugins/auth-pam/#{file}",
+          "security/pam_appl.h", "pam/pam_appl.h"
+      end
+    end
+
     # Build and install binary
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
@@ -32,26 +27,11 @@ class Openvpn < Formula
     system "make install"
 
     # Adjust sample file paths
-    if build.devel?
-      inreplace ["sample/sample-config-files/openvpn-startup.sh"] do |s|
-        s.gsub! "/etc/openvpn", etc+'openvpn'
-      end
+    inreplace "sample/sample-config-files/openvpn-startup.sh",
+      "/etc/openvpn", "#{etc}/openvpn"
 
-      # Install sample files
-      Dir['sample/sample-*'].each do |d|
-        (share + 'doc/openvpn' + d).install Dir[d+'/*']
-      end
-    else
-      inreplace ["sample-config-files/openvpn-startup.sh", "sample-scripts/openvpn.init"] do |s|
-        s.gsub! "/etc/openvpn", etc+'openvpn'
-        s.gsub! "/var/run/openvpn", var+'run/openvpn'
-      end
-
-      # Install sample files
-      Dir['sample-*'].each do |d|
-        (share + 'doc/openvpn' + d).install Dir[d+'/*']
-      end
-    end
+    # Install sample files
+    (doc/"sample").install Dir["sample/sample-*"]
 
     # Create etc & var paths
     (etc + 'openvpn').mkpath
@@ -59,14 +39,8 @@ class Openvpn < Formula
   end
 
   def caveats; <<-EOS.undent
-    You may also wish to install tuntap:
-
-      The TunTap project provides kernel extensions for Mac OS X that allow
-      creation of virtual network interfaces.
-
-      http://tuntaposx.sourceforge.net/
-
-    Because these are kernel extensions, there is no Homebrew formula for tuntap.
+    Make sure to follow the directions given by `brew info tuntap`
+    before trying to use OpenVPN.
 
     For OpenVPN to work as a server, you will need to create configuration file
     in #{etc}/openvpn, samples can be found in #{share}/doc/openvpn
@@ -84,7 +58,7 @@ class Openvpn < Formula
       <string>#{plist_name}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/sbin/openvpn</string>
+        <string>#{opt_sbin}/openvpn</string>
         <string>--config</string>
         <string>#{etc}/openvpn/openvpn.conf</string>
       </array>
@@ -105,20 +79,3 @@ class Openvpn < Formula
     EOS
   end
 end
-
-__END__
-diff --git a/socket.c b/socket.c
-index 4720398..faa1782 100644
---- a/socket.c
-+++ b/socket.c
-@@ -35,6 +35,10 @@
-
- #include "memdbg.h"
-
-+#ifndef SOL_IP
-+#define SOL_IP IPPROTO_IP
-+#endif
-+
- const int proto_overhead[] = { /* indexed by PROTO_x */
-   IPv4_UDP_HEADER_SIZE,
-   IPv4_TCP_HEADER_SIZE,

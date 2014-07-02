@@ -1,44 +1,47 @@
-require 'formula'
+require "formula"
 
 class Mosquitto < Formula
-  homepage 'http://mosquitto.org/'
-  url 'http://mosquitto.org/files/source/mosquitto-1.1.1.tar.gz'
-  sha1 '8fb14a8d50bade0339b2365c5f9f16a1e36a8b7c'
+  homepage "http://mosquitto.org/"
+  url "http://mosquitto.org/files/source/mosquitto-1.3.1.tar.gz"
+  sha1 "dcba02c12dffa27a0e76e68f88de21fb5f7de29d"
+  revision 1
 
-  depends_on 'pkg-config' => :build
-  depends_on 'cmake' => :build
+  bottle do
+    sha1 "72a9d7a8fe725804d1d1b802e598c7ce54e1871b" => :mavericks
+    sha1 "1f97f45bb8937ecde69eb5d3cdca065843be86e8" => :mountain_lion
+    sha1 "8f39cbe81f2c7f3a0df82baaf9dcca8ebb1ff238" => :lion
+  end
+
+  depends_on "pkg-config" => :build
+  depends_on "cmake" => :build
+  depends_on "c-ares"
+
   # mosquitto requires OpenSSL >=1.0 for TLS support
-  depends_on 'openssl'
+  depends_on "openssl"
 
   def install
-    openssl = Formula.factory('openssl')
-
-    # specify brew-supplied OpenSSL libraries and includes
-    inreplace "CMakeLists.txt", "set (OPENSSL_INCLUDE_DIR \"\")", "set (OPENSSL_INCLUDE_DIR \"#{openssl.include}\")\nset (OPENSSL_LIBRARIES \"#{openssl.lib}\")"
-
     system "cmake", ".", *std_cmake_args
     system "make install"
 
-    # Create the working directory under var
-    (var+'mosquitto').mkpath
+    # Create the working directory
+    (var/"mosquitto").mkpath
   end
 
-  def test
-    system "#{sbin}/mosquitto -h > /dev/null ; [ $? -eq 3 ]"
+  test do
+    quiet_system "#{sbin}/mosquitto", "-h"
+    assert_equal 3, $?.exitstatus
   end
 
-  def caveats
-    return <<-EOD.undent
+  def caveats; <<-EOD.undent
     mosquitto has been installed with a default configuration file.
-        You can make changes to the configuration by editing
+    You can make changes to the configuration by editing:
         #{etc}/mosquitto/mosquitto.conf
 
-    Python client bindings can be installed from the Python Package Index
+    Python client bindings can be installed from the Python Package Index:
         pip install mosquitto
 
-    Javascript client is available at
-        http://mosquitto.org/js/
-      EOD
+    Javascript client has been removed, see Eclipse Paho for an alternative.
+    EOD
   end
 
   plist_options :manual => "mosquitto -c #{HOMEBREW_PREFIX}/etc/mosquitto/mosquitto.conf"
@@ -52,7 +55,7 @@ class Mosquitto < Formula
       <string>#{plist_name}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/sbin/mosquitto</string>
+        <string>#{opt_sbin}/mosquitto</string>
         <string>-c</string>
         <string>#{etc}/mosquitto/mosquitto.conf</string>
       </array>
@@ -60,8 +63,6 @@ class Mosquitto < Formula
       <true/>
       <key>KeepAlive</key>
       <false/>
-      <key>UserName</key>
-      <string>#{`whoami`.chomp}</string>
       <key>WorkingDirectory</key>
       <string>#{var}/mosquitto</string>
     </dict>

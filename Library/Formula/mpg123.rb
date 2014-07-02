@@ -1,16 +1,16 @@
-require 'formula'
+require "formula"
 
 class Mpg123 < Formula
-  homepage 'http://www.mpg123.de/'
-  url 'http://downloads.sourceforge.net/project/mpg123/mpg123/1.14.4/mpg123-1.14.4.tar.bz2'
-  mirror 'http://www.mpg123.de/download/mpg123-1.14.4.tar.bz2'
-  sha1 '9f53e27bb40b8df3d3b6df25f5f9a8a83b1fccfe'
+  homepage "http://www.mpg123.de/"
+  url "https://downloads.sourceforge.net/project/mpg123/mpg123/1.20.0/mpg123-1.20.0.tar.bz2"
+  mirror "http://mpg123.orgis.org/download/mpg123-1.20.0.tar.bz2"
+  sha1 "f8060769e60c88fa2debf6c998773880e57b31a6"
 
   def install
     args = ["--disable-debug", "--disable-dependency-tracking",
             "--prefix=#{prefix}",
-            '--with-default-audio=coreaudio',
-            '--with-module-suffix=.so']
+            "--with-default-audio=coreaudio",
+            "--with-module-suffix=.so"]
 
     if MacOS.prefer_64_bit?
       args << "--with-cpu=x86-64"

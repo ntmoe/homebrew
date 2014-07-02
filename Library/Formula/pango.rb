@@ -1,28 +1,23 @@
 require 'formula'
 
 class Pango < Formula
-  homepage 'http://www.pango.org/'
-  url 'http://ftp.gnome.org/pub/GNOME/sources/pango/1.30/pango-1.30.1.tar.xz'
-  sha256 '3a8c061e143c272ddcd5467b3567e970cfbb64d1d1600a8f8e62435556220cbe'
+  homepage "http://www.pango.org/"
+  url "http://ftp.gnome.org/pub/GNOME/sources/pango/1.36/pango-1.36.5.tar.xz"
+  sha256 "be0e94b2e5c7459f0b6db21efab6253556c8f443837200b8736d697071276ac8"
 
-  option 'without-x', 'Build without X11 support'
-
-  depends_on 'pkg-config' => :build
-  depends_on 'xz' => :build
-  depends_on 'glib'
-  depends_on :x11 unless build.include? 'without-x'
-
-  if MacOS.version == :leopard
-    depends_on 'fontconfig'
-  else
-    depends_on :fontconfig
+  bottle do
+    sha1 "cae579ffdc52ad681a23d5af611818c9af873e67" => :mavericks
+    sha1 "473cd6a06a42e4d3e6bc24779b2094e771b16560" => :mountain_lion
+    sha1 "73880906087275dcd394f0567136898bbf2dca94" => :lion
   end
 
-  # The Cairo library shipped with Lion contains a flaw that causes Graphviz
-  # to segfault. See the following ticket for information:
-  #   https://trac.macports.org/ticket/30370
-  # We depend on our cairo on all platforms for consistency
+  depends_on 'pkg-config' => :build
+  depends_on 'glib'
   depends_on 'cairo'
+  depends_on 'harfbuzz'
+  depends_on 'fontconfig'
+  depends_on :x11 => :recommended
+  depends_on 'gobject-introspection'
 
   fails_with :llvm do
     build 2326
@@ -32,16 +27,17 @@ class Pango < Formula
   def install
     args = %W[
       --disable-dependency-tracking
+      --disable-silent-rules
       --prefix=#{prefix}
       --enable-man
       --with-html-dir=#{share}/doc
-      --disable-introspection
+      --enable-introspection=yes
     ]
 
-    if build.include? 'without-x'
-      args << '--without-x'
+    if build.without? "x11"
+      args << '--without-xft'
     else
-      args << '--with-x'
+      args << '--with-xft'
     end
 
     system "./configure", *args
@@ -50,8 +46,6 @@ class Pango < Formula
   end
 
   test do
-    system "#{bin}/pango-view", "-t", "test-image",
-                                "--waterfall", "--rotate=10",
-                                "--annotate=1", "--header"
+    system "#{bin}/pango-querymodules", "--version"
   end
 end

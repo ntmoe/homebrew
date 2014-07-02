@@ -6,10 +6,8 @@ class Iozone < Formula
   sha1 '397c2aae67f74dc9d189912b2e72ca594b790101'
 
   # Patch by @nijotz, adds O_DIRECT support when using -I flag.
-  # See: https://github.com/mxcl/homebrew/pull/10585
-  def patches
-    DATA
-  end
+  # See: https://github.com/Homebrew/homebrew/pull/10585
+  patch :DATA
 
   def install
     cd 'src/current' do
@@ -20,8 +18,11 @@ class Iozone < Formula
     man1.install 'docs/iozone.1'
   end
 
-  def test
-    `#{bin}/iozone -I -s 16M | grep -c O_DIRECT`.chomp == '1'
+  test do
+    require 'open3'
+    Open3.popen3("#{bin}/iozone", "-I", "-s", "16M") do |_, stdout, _|
+      assert_match /File size set to 16384 KB/, stdout.read
+    end
   end
 end
 

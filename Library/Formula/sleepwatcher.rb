@@ -29,9 +29,13 @@ class Sleepwatcher < Formula
 
     # Write the launchd scripts
     inreplace Dir["config/*.plist"] do |s|
-      s.gsub! "/etc", (etc + 'sleepwatcher')
-      s.gsub! "/usr/local/sbin", (HOMEBREW_PREFIX + 'sbin')
+      s.gsub! "/usr/local/sbin", HOMEBREW_PREFIX/'sbin'
     end
+
+    inreplace 'config/de.bernhard-baehr.sleepwatcher-20compatibility.plist' do |s|
+      s.gsub! "/etc", (etc + 'sleepwatcher')
+    end
+
     prefix.install Dir["config/*.plist"]
   end
 
@@ -44,7 +48,7 @@ class Sleepwatcher < Formula
     but read information regarding setup of the launchd files which
     are installed here:
 
-      #{Dir[(prefix + '*.plist')].join("\n      ")}
+      #{Dir["#{prefix}/*.plist"].join("\n      ")}
 
     These are the examples provided by the author.
     EOS

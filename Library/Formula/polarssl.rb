@@ -2,10 +2,12 @@ require 'formula'
 
 class Polarssl < Formula
   homepage 'http://polarssl.org/'
-  url 'http://polarssl.org/code/releases/polarssl-1.2.3-gpl.tgz'
-  sha1 'b47b3db19c4487c5930eaec23dda0dbd24851146'
+  url 'https://polarssl.org/download/polarssl-1.3.7-gpl.tgz'
+  sha1 '4bfce7f2e833bead53ecd38098325a784ada5c39'
 
   depends_on 'cmake' => :build
+
+  conflicts_with 'md5sha1sum', :because => 'both install conflicting binaries'
 
   def install
     system "cmake", ".",  *std_cmake_args

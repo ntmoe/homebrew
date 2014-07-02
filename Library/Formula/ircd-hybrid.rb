@@ -1,24 +1,29 @@
-require 'formula'
+require "formula"
 
 class IrcdHybrid < Formula
-  homepage 'http://www.ircd-hybrid.org/'
-  url 'http://sourceforge.net/projects/ircd-hybrid/files/ircd-hybrid/ircd-hybrid-8.0.4/ircd-hybrid-8.0.4.tgz'
-  sha1 '610df82fba0f5c21202c3d4910f9d68ae220ebcb'
+  homepage "http://www.ircd-hybrid.org/"
+  url "https://downloads.sourceforge.net/project/ircd-hybrid/ircd-hybrid/ircd-hybrid-8.1.18/ircd-hybrid-8.1.18.tgz"
+  sha1 "2dbb4a3dfd4b51d9f0cdcb587720c711e2147ff6"
 
   # ircd-hybrid needs the .la files
   skip_clean :la
 
+  depends_on "openssl"
+
   def install
+    ENV.j1 # build system trips over itself
+
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--localstatedir=#{var}",
-                          # there's no config setting for this so set it to something generous
-                          "--with-nicklen=30"
+                          "--sysconfdir=#{etc}",
+                          "--enable-openssl=#{Formula["openssl"].opt_prefix}"
     system "make install"
+    etc.install "doc/reference.conf" => "ircd.conf"
   end
 
-  def test
-    system "ircd -version"
+  test do
+    system "#{bin}/ircd", "-version"
   end
 
   def caveats; <<-EOS.undent
@@ -40,12 +45,10 @@ class IrcdHybrid < Formula
       <string>#{plist_name}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/sbin/ircd</string>
+        <string>#{opt_sbin}/ircd</string>
       </array>
       <key>RunAtLoad</key>
       <true/>
-      <key>UserName</key>
-      <string>#{`whoami`.chomp}</string>
       <key>WorkingDirectory</key>
       <string>#{HOMEBREW_PREFIX}</string>
       <key>StandardErrorPath</key>

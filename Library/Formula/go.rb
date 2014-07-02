@@ -2,80 +2,98 @@ require 'formula'
 
 class Go < Formula
   homepage 'http://golang.org'
-  url 'http://go.googlecode.com/files/go1.0.3.src.tar.gz'
-  version '1.0.3'
-  sha1 '1a67293c10d6c06c633c078a7ca67e98c8b58471'
+  head 'https://go.googlecode.com/hg/'
+  url 'https://storage.googleapis.com/golang/go1.3.src.tar.gz'
+  version '1.3'
+  sha1 '9f9dfcbcb4fa126b2b66c0830dc733215f2f056e'
 
-  head 'http://go.googlecode.com/hg/'
-
-  skip_clean 'bin'
+  bottle do
+    sha1 "86ad80f44b3114aaf53d5e673777f947d1fac3df" => :mavericks
+    sha1 "54e22253d53cee4b13636e5b673d3e83eeac178a" => :mountain_lion
+    sha1 "f3f9ce904f6d2b136db82683b405265b88fcd0c3" => :lion
+  end
 
   option 'cross-compile-all', "Build the cross-compilers and runtime support for all supported platforms"
   option 'cross-compile-common', "Build the cross-compilers and runtime support for darwin, linux and windows"
+  option 'without-cgo', "Build without cgo"
 
   def install
     # install the completion scripts
-    (prefix/'etc/bash_completion.d').install 'misc/bash/go' => 'go-completion.bash'
-    (share/'zsh/site-functions').install 'misc/zsh/go' => '_go'
+    bash_completion.install 'misc/bash/go' => 'go-completion.bash'
+    zsh_completion.install 'misc/zsh/go' => 'go'
 
+    # host platform (darwin) must come last in the targets list
     if build.include? 'cross-compile-all'
       targets = [
-        ['darwin',  ['386', 'amd64'],        { :cgo => true  }],
-        ['linux',   ['386', 'amd64', 'arm'], { :cgo => false }],
-        ['freebsd', ['386', 'amd64'],        { :cgo => false }],
-
-        ['openbsd', ['386', 'amd64'],        { :cgo => false }],
-
-        ['windows', ['386', 'amd64'],        { :cgo => false }],
+        ['linux',   ['386', 'amd64', 'arm']],
+        ['freebsd', ['386', 'amd64']],
+        ['netbsd',  ['386', 'amd64']],
+        ['openbsd', ['386', 'amd64']],
+        ['windows', ['386', 'amd64']],
+        ['darwin',  ['386', 'amd64']],
       ]
     elsif build.include? 'cross-compile-common'
       targets = [
-        ['darwin',  ['386', 'amd64'],        { :cgo => true  }],
-        ['linux',   ['386', 'amd64', 'arm'], { :cgo => false }],
-        ['windows', ['386', 'amd64'],        { :cgo => false }],
+        ['linux',   ['386', 'amd64', 'arm']],
+        ['windows', ['386', 'amd64']],
+        ['darwin',  ['386', 'amd64']],
       ]
     else
-      targets = [
-        ['darwin', [''], { :cgo => true }]
-      ]
+      targets = [['darwin', ['']]]
     end
 
     # The version check is due to:
     # http://codereview.appspot.com/5654068
-    Pathname.new('VERSION').write 'default' if build.head?
+    (buildpath/'VERSION').write('default') if build.head?
 
     cd 'src' do
-      # Build only. Run `brew test go` to run distrib's tests.
-      targets.each do |(os, archs, opts)|
-      archs.each do |arch|
-        ENV['GOROOT_FINAL'] = prefix
-        ENV['GOOS']         = os
-        ENV['GOARCH']       = arch
-        ENV['CGO_ENABLED']  = opts[:cgo] ? "1" : "0"
-        allow_fail = opts[:allow_fail] ? "|| true" : ""
-        system "./make.bash --no-clean #{allow_fail}"
-      end
+      targets.each do |os, archs|
+        cgo_enabled = os == 'darwin' && build.with?('cgo') ? "1" : "0"
+        archs.each do |arch|
+          ENV['GOROOT_FINAL'] = libexec
+          ENV['GOOS']         = os
+          ENV['GOARCH']       = arch
+          ENV['CGO_ENABLED']  = cgo_enabled
+          system "./make.bash", "--no-clean"
+        end
       end
     end
 
-    # cleanup ENV
-    ENV.delete('GOROOT_FINAL')
-    ENV.delete('GOOS')
-    ENV.delete('GOARCH')
-    ENV.delete('CGO_ENABLED')
+    (buildpath/'pkg/obj').rmtree
 
-    Pathname.new('pkg/obj').rmtree
-
-    # Don't install header files; they aren't necessary and can
-    # cause problems with other builds. See:
-    # http://trac.macports.org/ticket/30203
-    # http://code.google.com/p/go/issues/detail?id=2407
-    prefix.install(Dir['*'] - ['include'])
+    libexec.install Dir['*']
+    bin.install_symlink Dir["#{libexec}/bin/go*"]
   end
 
-  def test
-    cd "#{prefix}/src" do
-      system './run.bash --no-rebuild'
-    end
+  def caveats; <<-EOS.undent
+    As of go 1.2, a valid GOPATH is required to use the `go get` command:
+      http://golang.org/doc/code.html#GOPATH
+
+    `go vet` and `go doc` are now part of the go.tools sub repo:
+      http://golang.org/doc/go1.2#go_tools_godoc
+
+    To get `go vet` and `go doc` run:
+      go get code.google.com/p/go.tools/cmd/godoc
+      go get code.google.com/p/go.tools/cmd/vet
+
+    You may wish to add the GOROOT-based install location to your PATH:
+      export PATH=$PATH:#{opt_libexec}/bin
+    EOS
+  end
+
+  test do
+    (testpath/'hello.go').write <<-EOS.undent
+    package main
+
+    import "fmt"
+
+    func main() {
+        fmt.Println("Hello World")
+    }
+    EOS
+    # Run go fmt check for no errors then run the program.
+    # This is a a bare minimum of go working as it uses fmt, build, and run.
+    system "#{bin}/go", "fmt", "hello.go"
+    assert_equal "Hello World\n", `#{bin}/go run hello.go`
   end
 end

@@ -1,25 +1,19 @@
-require 'formula'
+require "formula"
 
 class SoundTouch < Formula
-  homepage 'http://www.surina.net/soundtouch/'
-  url 'http://www.surina.net/soundtouch/soundtouch-1.6.0.tar.gz'
-  sha256 '8776edaf7299ffe1e8c97285f020365a63c0e01aa4f6f7c5fd1d011c0ded278f'
+  homepage "http://www.surina.net/soundtouch/"
+  url "http://www.surina.net/soundtouch/soundtouch-1.8.0.tar.gz"
+  sha256 "3d4161d74ca25c5a98c69dbb8ea10fd2be409ba1a3a0bf81db407c4c261f166b"
 
-  depends_on :autoconf
-  depends_on :automake
-  depends_on :libtool
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
 
   def install
-    # SoundTouch has a small amount of inline assembly. The assembly has two labeled
-    # jumps. When compiling with gcc optimizations the inline assembly is duplicated
-    # and the symbol label occurs twice causing the build to fail.
-    ENV.no_optimization
-    # 64bit causes soundstretch to segfault when ever it is run.
-    ENV.m32
-
-    # The tarball doesn't contain a configure script, so we have to bootstrap.
-    system "/bin/sh bootstrap"
-    system "./configure", "--prefix=#{prefix}", "--disable-dependency-tracking"
-    system "make install"
+    system "/bin/sh", "bootstrap"
+    system "./configure", "--disable-dependency-tracking",
+                          "--disable-silent-rules",
+                          "--prefix=#{prefix}"
+    system "make", "install"
   end
 end

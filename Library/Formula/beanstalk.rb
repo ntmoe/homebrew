@@ -1,14 +1,13 @@
 require 'formula'
 
 class Beanstalk < Formula
-  homepage 'http://kr.github.com/beanstalkd/'
-  url 'https://github.com/downloads/kr/beanstalkd/beanstalkd-1.8.tar.gz'
-  sha1 'b8c274d7233e02c6793d8d119608ad7c878b0954'
+  homepage 'http://kr.github.io/beanstalkd/'
+  url 'https://github.com/kr/beanstalkd/archive/v1.9.tar.gz'
+  sha1 'a3cdb93d9c7465491c58c8e7a99d63d779067845'
 
   def install
     system "make", "install", "PREFIX=#{prefix}"
   end
-
 
   plist_options :manual => "beanstalkd"
 
@@ -23,14 +22,12 @@ class Beanstalk < Formula
         <string>#{plist_name}</string>
         <key>ProgramArguments</key>
         <array>
-          <string>#{opt_prefix}/bin/beanstalkd</string>
+          <string>#{opt_bin}/beanstalkd</string>
         </array>
         <key>RunAtLoad</key>
         <true/>
         <key>KeepAlive</key>
         <true/>
-        <key>UserName</key>
-        <string>#{`whoami`.chomp}</string>
         <key>WorkingDirectory</key>
         <string>#{var}</string>
         <key>StandardErrorPath</key>

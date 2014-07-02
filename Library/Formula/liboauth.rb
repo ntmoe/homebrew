@@ -2,8 +2,8 @@ require 'formula'
 
 class Liboauth < Formula
   homepage 'http://liboauth.sourceforge.net'
-  url 'http://sourceforge.net/projects/liboauth/files/liboauth-1.0.0.tar.gz'
-  sha1 'cc936a440084f159cc46dab9018f1353f8bee80a'
+  url 'https://downloads.sourceforge.net/project/liboauth/liboauth-1.0.3.tar.gz'
+  sha1 '791dbb4166b5d2c843c8ff48ac17284cc0884af2'
 
   def install
     system "./configure", "--disable-dependency-tracking",

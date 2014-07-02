@@ -1,12 +1,17 @@
-require 'formula'
+require "formula"
 
 class Talloc < Formula
-  url 'http://www.samba.org/ftp/talloc/talloc-2.0.7.tar.gz'
-  homepage 'http://talloc.samba.org/'
-  sha1 'fb84ee401b6e094503056b030ce31fcbcc9d06aa'
+  homepage "http://talloc.samba.org/"
+  url "http://www.samba.org/ftp/talloc/talloc-2.1.1.tar.gz"
+  sha1 "380bb786274dfd1a4a8179d31cd88cbee15c97bf"
+
+  conflicts_with "samba", :because => "both install `include/talloc.h`"
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--disable-rpath"
+    system "./configure", "--prefix=#{prefix}",
+                          "--disable-rpath",
+                          "--without-gettext",
+                          "--disable-python"
     system "make install"
   end
 end

@@ -2,15 +2,13 @@ require 'formula'
 
 class Libmikmod < Formula
   homepage 'http://mikmod.shlomifish.org'
-  url 'http://mikmod.shlomifish.org/files/libmikmod-3.2.0.tar.gz'
-  sha256 '734c8490bbf9b0c587920b92414dcfa3c2267838a0cdf698d5f1fb6bba8f661e'
+  url 'https://downloads.sourceforge.net/project/mikmod/libmikmod/3.3.6/libmikmod-3.3.6.tar.gz'
+  sha256 '3f363e03f7b1db75b9b6602841bbd440ed275a548e53545f980df8155de4d330'
 
   option 'with-debug', 'Enable debugging symbols'
 
   def install
-    if build.include? 'with-debug'
-      (ENV.compiler == :clang) ? ENV.Og : ENV.O2
-    end
+    ENV.O2 if build.with? 'debug'
 
     # OSX has CoreAudio, but ALSA is not for this OS nor is SAM9407 nor ULTRA.
     args = %W[
@@ -19,14 +17,14 @@ class Libmikmod < Formula
       --disable-sam9407
       --disable-ultra
     ]
-    args << '--with-debug' if build.include? 'with-debug'
+    args << '--with-debug' if build.with? 'debug'
     mkdir 'macbuild' do
       system "../configure", *args
       system "make install"
     end
   end
 
-  def test
+  test do
     system "#{bin}/libmikmod-config", "--version"
   end
 end

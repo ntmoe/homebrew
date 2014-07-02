@@ -2,8 +2,8 @@ require 'formula'
 
 class Polipo < Formula
   homepage 'http://www.pps.jussieu.fr/~jch/software/polipo/'
-  url 'http://freehaven.net/~chrisd/polipo/polipo-1.0.4.1.tar.gz'
-  sha1 'e755b585a9bba2b599a6bcc7c6f7035d3cb27bec'
+  url 'http://www.pps.univ-paris-diderot.fr/~jch/software/files/polipo/polipo-1.1.1.tar.gz'
+  sha1 'cf7461a96c4bf012496844d5a54171182c2cb1a7'
 
   head 'git://git.wifi.pps.jussieu.fr/polipo'
 
@@ -32,11 +32,9 @@ class Polipo < Formula
         <true/>
         <key>KeepAlive</key>
         <true/>
-        <key>UserName</key>
-        <string>#{`whoami`.chomp}</string>
         <key>ProgramArguments</key>
         <array>
-          <string>#{opt_prefix}/bin/polipo</string>
+          <string>#{opt_bin}/polipo</string>
         </array>
       </dict>
     </plist>

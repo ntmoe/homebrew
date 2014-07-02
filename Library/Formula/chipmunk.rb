@@ -2,17 +2,15 @@ require 'formula'
 
 class Chipmunk < Formula
   homepage 'http://chipmunk-physics.net/'
-  url 'https://github.com/slembcke/Chipmunk-Physics/tarball/Chipmunk-6.1.2'
-  sha1 '8f4df376e6f45320c77e5ce9880c02ab7a284061'
-
-  head 'https://github.com/slembcke/Chipmunk-Physics.git'
+  url 'https://chipmunk-physics.net/release/Chipmunk-6.x/Chipmunk-6.2.1.tgz'
+  sha1 '593a15a9032586e56b16d22d84f4f04c1f11a44e'
 
   depends_on 'cmake' => :build
 
   def install
     system "cmake", "-DCMAKE_INSTALL_PREFIX=#{prefix}",
-                    "-DCMAKE_PREFIX_PATH=#{prefix}",
-                    "-DPREFIX=#{prefix}",
+                    "-DCMAKE_BUILD_TYPE=Release",
+                    "-DBUILD_DEMOS=OFF",
                     "."
     system "make install"
   end

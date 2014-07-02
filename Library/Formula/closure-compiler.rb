@@ -1,12 +1,13 @@
 require 'formula'
 
 class ClosureCompiler < Formula
-  homepage 'http://code.google.com/p/closure-compiler/'
-  # Use an SVN download to get the externals as well
-  url 'svn+http://closure-compiler.googlecode.com/svn/trunk/', :revision => '2388'
-  version '20121212'
+  homepage 'https://github.com/google/closure-compiler'
+  url 'https://github.com/google/closure-compiler/archive/closure-compiler-maven-v20140407.tar.gz'
+  sha1 '80eba20da24f2d7b9f9f45d97ca49deb2668ef03'
 
-  head 'svn+http://closure-compiler.googlecode.com/svn/trunk/'
+  head 'https://github.com/google/closure-compiler.git'
+
+  depends_on :ant => :build
 
   def install
     system "ant", "clean"

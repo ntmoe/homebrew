@@ -11,17 +11,13 @@ class Libspotify < Formula
     doc.install Dir['docs/*']
     doc.install %w(ChangeLog README LICENSE licenses.xhtml examples)
     man3.install Dir['man3/*']
-
-    lib.cd do
-      ln_s "libspotify.12.1.51.dylib", "libspotify.dylib"
-      ln_s "libspotify.12.1.51.dylib", "libspotify.12.dylib"
-    end
-
-    (lib+'pkgconfig/libspotify.pc').write pc_content
+    lib.install_symlink "libspotify.12.1.51.dylib" => "libspotify.dylib"
+    lib.install_symlink "libspotify.12.1.51.dylib" => "libspotify.12.dylib"
+    (lib+'pkgconfig/libspotify.pc').write pc_file
   end
 
-  def pc_content; <<-EOS.undent
-    prefix=#{HOMEBREW_PREFIX}
+  def pc_file; <<-EOS.undent
+    prefix=#{opt_prefix}
     exec_prefix=${prefix}
     libdir=${exec_prefix}/lib
     includedir=${prefix}/include

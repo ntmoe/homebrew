@@ -1,12 +1,12 @@
-require 'formula'
+require "formula"
 
 class Libfixbuf < Formula
-  homepage 'http://tools.netsa.cert.org/fixbuf/'
-  url 'http://tools.netsa.cert.org/releases/libfixbuf-1.2.0.tar.gz'
-  sha1 'c05c832f5317b1e51fa178e58cd4e6ba914d567b'
+  homepage "http://tools.netsa.cert.org/fixbuf/"
+  url "http://tools.netsa.cert.org/releases/libfixbuf-1.5.0.tar.gz"
+  sha1 "6e77c2ec1ee32514454ad1fff6494265c583e72c"
 
-  depends_on 'pkg-config' => :build
-  depends_on 'glib'
+  depends_on "pkg-config" => :build
+  depends_on "glib"
 
   def install
     system "./configure", "--disable-debug", "--disable-dependency-tracking",

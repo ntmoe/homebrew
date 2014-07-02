@@ -1,13 +1,10 @@
 require 'formula'
 
-def option? opt
-  build.include? opt or build.include? 'with-all'
-end
-
 class Pike < Formula
   homepage 'http://pike.lysator.liu.se'
-  url 'http://pike.lysator.liu.se/pub/pike/latest-stable/Pike-v7.8.700.tar.gz'
-  sha1 '877bd50d2bb202aa485d1f7c62398922d60696c7'
+  url 'http://pike.lysator.liu.se/pub/pike/all/7.8.866/Pike-v7.8.866.tar.gz'
+  sha1 'f3d6cc21e302576c3ac4bb5a525705dbeee2d060'
+  revision 1
 
   depends_on "nettle"
   depends_on "gmp"
@@ -16,14 +13,14 @@ class Pike < Formula
   depends_on 'libtiff' => :recommended
 
   # optional dependencies
-  depends_on 'gettext'       if option? 'with-gettext'
-  depends_on 'gdbm'          if option? 'with-gdbm'
-  depends_on 'gtk+'          if option? 'with-gtk2'
-  depends_on 'mysql'         if option? 'with-mysql'
-  depends_on 'sdl'           if option? 'with-sdl'
-  depends_on 'sane-backends' if option? 'with-sane'
-  depends_on 'pdflib-lite'   if option? 'with-pdf'
-  depends_on 'mesalib-glw'   if option? 'with-gl'
+  depends_on 'gettext'       if build.with? "gettext" or build.with? "all"
+  depends_on 'gdbm'          if build.with? "gdbm"    or build.with? "all"
+  depends_on 'gtk+'          if build.with? "gtk2"    or build.with? "all"
+  depends_on 'mysql'         if build.with? "mysql"   or build.with? "all"
+  depends_on 'sdl'           if build.with? "sdl"     or build.with? "all"
+  depends_on 'sane-backends' if build.with? "sane"    or build.with? "all"
+  depends_on 'pdflib-lite'   if build.with? "pdf"     or build.with? "all"
+  depends_on 'mesalib-glw'   if build.with? "gl"      or build.with? "all"
 
   option 'with-gettext', 'Include Gettext support'
   option 'with-gdbm', 'Include Gdbm support'
@@ -53,7 +50,7 @@ class Pike < Formula
       args << "--with-abi=32"
     end
 
-    unless build.include? 'with-machine-code'
+    if build.without? "machine-code"
       args << "--without-machine-code"
     end
 
@@ -98,7 +95,21 @@ class Pike < Formula
                     "include_path=#{libexec}/include",
                     "INSTALLARGS=--traditional"
 
-   bin.install_symlink "#{libexec}/bin/pike"
-   share.install_symlink "#{libexec}/share/man"
+    bin.install_symlink "#{libexec}/bin/pike"
+    share.install_symlink "#{libexec}/share/man"
+  end
+
+  test do
+    path = testpath/"test.pike"
+    path.write <<-EOS.undent
+      int main() {
+        for (int i=0; i<10; i++) { write("%d", i); }
+        return 0;
+      }
+    EOS
+
+    out = `#{bin}/pike #{path}`
+    assert_equal "0123456789", out
+    assert_equal 0, $?.exitstatus
   end
 end

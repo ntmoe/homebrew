@@ -2,28 +2,24 @@ require 'formula'
 
 class CrosstoolNg < Formula
   homepage 'http://crosstool-ng.org'
-  url 'http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-1.17.0.tar.bz2'
-  sha1 '39a8d075bb8106fbc25e537a147228253dbf8cb7'
+  url 'http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-1.19.0.tar.bz2'
+  sha1 'b7ae3e90756b499ff5362064b7d80f8a45d09bfb'
 
-  depends_on :automake => :build
+  depends_on :autoconf
+  depends_on :automake
+  depends_on :libtool
   depends_on 'coreutils' => :build
   depends_on 'wget'
   depends_on 'gnu-sed'
   depends_on 'gawk'
   depends_on 'binutils'
+  depends_on 'libelf'
 
+  # Avoid superenv to prevent https://github.com/mxcl/homebrew/pull/10552#issuecomment-9736248
   env :std
 
-  def patches
-    # Fixes clang offsetof compatability. Took better patch from #14547
-    p = [DATA]
-    # The following patches are already upstream.
-    # They can be removed at the next release.
-    p << 'http://crosstool-ng.org/download/crosstool-ng/01-fixes/1.17.0/000-scripts_unquoted_variable_reference_in_glibc_eglibc_sh_common.patch'
-    p << 'http://crosstool-ng.org/download/crosstool-ng/01-fixes/1.17.0/001-scripts_fail_on_in_paths.patch'
-    # The 'case ;;&' construct is a bash4ism. Get rid of it.
-    p << 'http://crosstool-ng.org/download/crosstool-ng/01-fixes/1.17.0/002-scripts_functions_fix_debug_shell.patch'
-  end
+  # Fixes clang offsetof compatability. Took better patch from #14547
+  patch :DATA
 
   def install
     system "./configure", "--prefix=#{prefix}",
@@ -34,24 +30,21 @@ class CrosstoolNg < Formula
                           "--with-libtool=glibtool",
                           "--with-libtoolize=glibtoolize",
                           "--with-install=ginstall",
+                          "--with-sed=gsed",
+                          "--with-awk=gawk",
                           "CFLAGS=-std=gnu89"
     # Must be done in two steps
     system "make"
     system "make install"
   end
 
-  def test
-    system "#{bin}/ct-ng version"
+  def caveats; <<-EOS.undent
+    You will need to install modern gcc compiler in order to use this tool.
+    EOS
   end
 
-  def caveats; <<-EOS.undent
-    If building a cross compiler your may expirience the following error:
-      error: elf.h: No such file or directory
-
-    To fix it, perform the following:
-      curl https://raw.github.com/gist/3769372/98e0a084470d2d6be7b4b61551ef00d44c682b4a/elf.h > elf.h
-      cp -p elf.h /usr/local/include/
-    EOS
+  test do
+    system "#{bin}/ct-ng", "version"
   end
 end
 

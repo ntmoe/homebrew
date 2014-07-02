@@ -2,12 +2,12 @@ require 'formula'
 
 class Klavaro < Formula
   homepage 'http://klavaro.sourceforge.net/'
-  url 'http://downloads.sourceforge.net/project/klavaro/klavaro-1.9.6.tar.bz2'
-  sha1 '781e0d79b4e805d648085ada46b82dae89093eaf'
+  url 'https://downloads.sourceforge.net/project/klavaro/klavaro-2.01.tar.bz2'
+  sha1 '42967960fb511abe60c536c1ff6794a0c35f38e5'
 
   depends_on 'pkg-config' => :build
+  depends_on 'intltool' => :build
   depends_on 'gtk+'
-  depends_on 'intltool'
   depends_on 'gtkdatabox'
   depends_on :x11
 
@@ -16,9 +16,5 @@ class Klavaro < Formula
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
     system "make install"
-  end
-
-  def test
-    system "#{bin}/klavaro"
   end
 end

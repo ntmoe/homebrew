@@ -2,9 +2,9 @@ require 'formula'
 
 class Metalua < Formula
   homepage 'http://metalua.luaforge.net/'
-  url 'https://github.com/fab13n/metalua/tarball/0.5-rc2'
+  url 'https://github.com/fab13n/metalua/archive/0.5-rc2.tar.gz'
   version '0.5-rc2'
-  sha1 'f6e9596930efed78a5b54b6a2fc338a77c3b0799'
+  sha1 'ee28c801e9673cc11d1cecd0a9fda87e7d21fd6d'
 
   head 'https://github.com/fab13n/metalua.git'
 
@@ -18,5 +18,11 @@ class Metalua < Formula
       system "./make.sh"
       system "./make-install.sh"
     end
+  end
+
+  test do
+    output = `#{bin}/metalua -e "for i=0,9 do io.write(i) end"`
+    assert_equal "0123456789", output
+    assert_equal 0, $?.exitstatus
   end
 end

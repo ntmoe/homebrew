@@ -2,8 +2,8 @@ require 'formula'
 
 class Libechonest < Formula
   homepage 'https://projects.kde.org/projects/playground/libs/libechonest'
-  url 'http://files.lfranchi.com/libechonest-2.0.2.tar.bz2'
-  sha1 '346eba6037ff544f84505941832604668c1e5b2b'
+  url 'http://files.lfranchi.com/libechonest-2.2.0.tar.bz2'
+  sha1 'fec281d9288c2a4fabd2dd275f1a508dd6d1bc5c'
 
   depends_on 'cmake' => :build
   depends_on 'qt'

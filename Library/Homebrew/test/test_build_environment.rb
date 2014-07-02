@@ -1,7 +1,7 @@
 require 'testing_env'
 require 'build_environment'
 
-class BuildEnvironmentTests < Test::Unit::TestCase
+class BuildEnvironmentTests < Homebrew::TestCase
   def setup
     @env = BuildEnvironment.new
   end
@@ -12,31 +12,33 @@ class BuildEnvironmentTests < Test::Unit::TestCase
 
   def test_std?
     @env << :std
-    assert @env.std?
+    assert_predicate @env, :std?
   end
 
   def test_userpaths?
     @env << :userpaths
-    assert @env.userpaths?
+    assert_predicate @env, :userpaths?
   end
 
   def test_modify_build_environment
-    @env << Proc.new { 1 }
-    assert_equal 1, @env.modify_build_environment
+    @env << Proc.new { raise StandardError }
+    assert_raises(StandardError) do
+      @env.modify_build_environment(self)
+    end
   end
 
   def test_marshal
     @env << :userpaths
     @env << Proc.new { 1 }
     dump = Marshal.dump(@env)
-    assert Marshal.load(dump).userpaths?
+    assert_predicate Marshal.load(dump), :userpaths?
   end
 
   def test_env_block
     foo = mock("foo")
     @env << Proc.new { foo.some_message }
     foo.expects(:some_message)
-    @env.modify_build_environment
+    @env.modify_build_environment(self)
   end
 
   def test_env_block_with_argument
@@ -47,7 +49,7 @@ class BuildEnvironmentTests < Test::Unit::TestCase
   end
 end
 
-class BuildEnvironmentDSLTests < Test::Unit::TestCase
+class BuildEnvironmentDSLTests < Homebrew::TestCase
   def make_instance(&block)
     Class.new do
       extend BuildEnvironmentDSL
@@ -58,12 +60,12 @@ class BuildEnvironmentDSLTests < Test::Unit::TestCase
 
   def test_env_single_argument
     obj = make_instance { env :userpaths }
-    assert obj.env.userpaths?
+    assert_predicate obj.env, :userpaths?
   end
 
   def test_env_multiple_arguments
     obj = make_instance { env :userpaths, :std }
-    assert obj.env.userpaths?
-    assert obj.env.std?
+    assert_predicate obj.env, :userpaths?
+    assert_predicate obj.env, :std?
   end
 end

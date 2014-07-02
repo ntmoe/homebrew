@@ -1,26 +1,24 @@
 require 'formula'
 
 class Ykpers < Formula
-  homepage 'http://code.google.com/p/yubikey-personalization/'
-  url 'http://yubikey-personalization.googlecode.com/files/ykpers-1.11.1.tar.gz'
-  sha1 '454f82e3ec0bbc7224fac542cf761db71c584621'
+  homepage 'http://yubico.github.io/yubikey-personalization/'
+  url 'http://opensource.yubico.com/yubikey-personalization/releases/ykpers-1.15.1.tar.gz'
+  sha1 'dd1478cc106c624318dfe74bb2beda54f18f1fc8'
+
+  option :universal
 
   depends_on 'libyubikey'
-
-  # Pre-Lion fix, per MacPorts. See:
-  # https://trac.macports.org/ticket/34910
-  def patches
-    {:p0 =>
-    "https://trac.macports.org/export/96037/trunk/dports/security/ykpers/files/patch-pre-Lion-strnlen.diff"
-    } unless MacOS.version >= :lion
-  end
+  depends_on 'json-c' => :recommended
+  depends_on 'pkg-config' => :build
 
   def install
-    libyubikey_prefix = Formula.factory('libyubikey').prefix
-    system "./configure", "--prefix=#{prefix}",
+    ENV.universal_binary if build.universal?
+    libyubikey_prefix = Formula["libyubikey"].opt_prefix
+    system "./configure", "--disable-dependency-tracking",
+                          "--prefix=#{prefix}",
                           "--with-libyubikey-prefix=#{libyubikey_prefix}",
-                          '--with-backend=osx',
-                          '--disable-dependency-tracking'
+                          "--with-backend=osx"
+    system "make check"
     system "make install"
   end
 end

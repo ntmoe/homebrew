@@ -1,26 +1,27 @@
 require 'formula'
 
 class Hub < Formula
-  homepage 'http://defunkt.io/hub/'
-  url 'https://github.com/defunkt/hub/tarball/v1.10.4'
-  sha1 'b43f69f20563cb779d77a6beaf773bad8c49ad4c'
+  homepage 'http://hub.github.com/'
+  url 'https://github.com/github/hub/archive/v1.12.1.tar.gz'
+  sha1 '934033bcd17a710a56f33acf099900baf0fe88f3'
+  head 'https://github.com/github/hub.git'
 
-  head 'https://github.com/defunkt/hub.git'
+  option 'without-completions', 'Disable bash/zsh completions'
 
   def install
-    system rake_bin, "install", "prefix=#{prefix}"
-    (prefix+'etc/bash_completion.d').install 'etc/hub.bash_completion.sh'
-    (share+'zsh/site-functions').install 'etc/hub.zsh_completion' => '_hub'
+    ENV['GIT_DIR'] = cached_download/'.git' if build.head?
+
+    rake "install", "prefix=#{prefix}"
+
+    if build.with? 'completions'
+      bash_completion.install 'etc/hub.bash_completion.sh'
+      zsh_completion.install 'etc/hub.zsh_completion' => '_hub'
+    end
   end
 
-  def rake_bin
-    require 'rbconfig'
-    ruby_rake = File.join RbConfig::CONFIG['bindir'], 'rake'
-
-    if File.exist? ruby_rake
-      ruby_rake
-    else
-      '/usr/bin/rake'
+  test do
+    HOMEBREW_REPOSITORY.cd do
+      assert_equal 'bin/brew', `#{bin}/hub ls-files -- bin`.strip
     end
   end
 end

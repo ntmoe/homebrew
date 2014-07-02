@@ -2,12 +2,12 @@ require 'formula'
 
 class Nagios < Formula
   homepage 'http://www.nagios.org/'
-  url 'http://downloads.sourceforge.net/project/nagios/nagios-3.x/nagios-3.4.3/nagios-3.4.3.tar.gz'
-  sha1 '3e9b73b9e219829ec4dca6ffe44106401d430ad3'
+  url 'https://downloads.sourceforge.net/project/nagios/nagios-4.x/nagios-4.0.6/nagios-4.0.6.tar.gz'
+  sha1 'aacd0ebc1a0a91692702667bd98f8a016b59780f'
 
   depends_on 'gd'
   depends_on 'nagios-plugins'
-  depends_on :libpng
+  depends_on 'libpng'
 
   def nagios_sbin;  prefix+'cgi-bin';       end
   def nagios_etc;   etc+'nagios';           end
@@ -38,7 +38,7 @@ class Nagios < Formula
     # Install config
     system "make install-config"
     system "make install-webconf"
-    mkdir HOMEBREW_PREFIX+'var/lib/nagios/rw' unless File.exists? HOMEBREW_PREFIX+'var/lib/nagios/rw'
+    mkdir HOMEBREW_PREFIX+'var/lib/nagios/rw' unless File.exist? HOMEBREW_PREFIX+'var/lib/nagios/rw'
   end
 
   plist_options :startup => true, :manual => "nagios #{HOMEBREW_PREFIX}/etc/nagios/nagios.cfg"
@@ -54,7 +54,7 @@ class Nagios < Formula
             <string>#{plist_name}</string>
             <key>ProgramArguments</key>
             <array>
-                    <string>#{opt_prefix}/bin/nagios</string>
+                    <string>#{opt_bin}/nagios</string>
                     <string>#{nagios_etc}/nagios.cfg</string>
             </array>
             <key>RunAtLoad</key>
@@ -63,8 +63,6 @@ class Nagios < Formula
             <string>/dev/null</string>
             <key>StandardOutPath</key>
             <string>/dev/null</string>
-            <key>UserName</key>
-            <string>#{user}</string>
     </dict>
     </plist>
     EOS

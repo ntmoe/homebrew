@@ -1,38 +1,41 @@
-require 'formula'
+require "formula"
 
 class Mpfr < Formula
-  homepage 'http://www.mpfr.org/'
+  homepage "http://www.mpfr.org/"
   # Upstream is down a lot, so use the GNU mirror + Gist for patches
-  url 'http://ftp.gnu.org/gnu/mpfr/mpfr-3.1.1.tar.bz2'
-  version '3.1.1-p2'
-  sha1 'f632d43943ff9f13c184fa13b9a6e8c7f420f4dd'
+  url "http://ftpmirror.gnu.org/mpfr/mpfr-3.1.2.tar.bz2"
+  mirror "http://ftp.gnu.org/gnu/mpfr/mpfr-3.1.2.tar.bz2"
+  sha1 "46d5a11a59a4e31f74f73dd70c5d57a59de2d0b4"
+  version "3.1.2-p8"
 
-  depends_on 'gmp'
+  bottle do
+    cellar :any
+    sha1 "ae9062f1736202e1e6324dbb74f6074d672708e8" => :mavericks
+    sha1 "6f4e0967728cb9ff5fad9de53dc38eb1648eee8e" => :mountain_lion
+    sha1 "63efa4c854ede1a352d73756d242514e042c8e2e" => :lion
+  end
 
-  option '32-bit'
+  # http://www.mpfr.org/mpfr-current/allpatches
+  patch do
+    url "https://gist.githubusercontent.com/jacknagel/7f276cd60149a1ffc9a7/raw/0f2c24423ceda0dae996e2333f395c7115db33ec/mpfr-3.1.2-8.diff"
+    sha1 "047c96dcfb86f010972dedae088a3e67eaaecb8a"
+  end
 
-  # Segfaults under superenv with clang 4.1/421. See:
-  # https://github.com/mxcl/homebrew/issues/15061
-  env :std
+  depends_on "gmp"
 
-  def patches
-    "https://gist.github.com/raw/4472199/42c0b207037a133527083d12adc9028b4da429ee/gistfile1.txt"
+  option "32-bit"
+
+  fails_with :clang do
+    build 421
+    cause <<-EOS.undent
+      clang build 421 segfaults while building in superenv;
+      see https://github.com/Homebrew/homebrew/issues/15061
+      EOS
   end
 
   def install
-    args = ["--disable-dependency-tracking", "--prefix=#{prefix}"]
-
-    # Build 32-bit where appropriate, and help configure find 64-bit CPUs
-    # Note: This logic should match what the GMP formula does.
-    if MacOS.prefer_64_bit? and not build.build_32_bit?
-      ENV.m64
-      args << "--build=x86_64-apple-darwin"
-    else
-      ENV.m32
-      args << "--build=none-apple-darwin"
-    end
-
-    system "./configure", *args
+    ENV.m32 if build.build_32_bit?
+    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
     system "make"
     system "make check"
     system "make install"

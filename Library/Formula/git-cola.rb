@@ -1,9 +1,9 @@
 require 'formula'
 
 class GitCola < Formula
-  homepage 'http://git-cola.github.com/'
-  url 'https://github.com/git-cola/git-cola/tarball/v1.8.1'
-  sha1 '125055ac18f30aa25bf9f0874b888659233ab22e'
+  homepage 'http://git-cola.github.io/'
+  url 'https://github.com/git-cola/git-cola/archive/v2.0.2.tar.gz'
+  sha1 'e3357ca8dc6bce1e92f5195bbefc0a82edbff262'
 
   head 'https://github.com/git-cola/git-cola.git'
 
@@ -11,17 +11,16 @@ class GitCola < Formula
 
   depends_on 'pyqt'
 
-  if build.include? 'with-docs'
+  if build.with? "docs"
     # these are needed to build man pages
     depends_on 'asciidoc'
     depends_on 'xmlto'
   end
 
   def install
-    ENV.prepend 'PYTHONPATH', "#{HOMEBREW_PREFIX}/lib/#{which_python}/site-packages", ':'
     system "make", "prefix=#{prefix}", "install"
 
-    if build.include? 'with-docs'
+    if build.with? "docs"
       system "make", "-C", "share/doc/git-cola",
                      "-f", "Makefile.asciidoc",
                      "prefix=#{prefix}",
@@ -29,7 +28,4 @@ class GitCola < Formula
     end
   end
 
-  def which_python
-    "python" + `python -c 'import sys;print(sys.version[:3])'`.strip
-  end
 end

@@ -1,32 +1,26 @@
 require 'formula'
 
-class X86_64_Architecture < Requirement
-  fatal true
-
-  satisfy MacOS.prefer_64_bit?
-
-  def message; <<-EOS.undent
-    Your system appears to run on a 32-bit architecture.
-    Postgres-XC only supports 64-bit architectures, sorry.
-    EOS
-  end
-end
-
 class PostgresXc < Formula
   homepage 'http://postgres-xc.sourceforge.net/'
-  url 'http://sourceforge.net/projects/postgres-xc/files/Version_1.0/pgxc-v1.0.1.tar.gz'
-  sha1 '350277d7b32e54baffdd52fa98bac6b14f088c6d'
+  url 'https://downloads.sourceforge.net/project/postgres-xc/Version_1.0/pgxc-v1.0.3.tar.gz'
+  sha1 '76774cf32810dfa14b2174f2e939d3b28eb211a9'
 
-  depends_on X86_64_Architecture.new
+  bottle do
+    sha1 "9996518f01b622e99d81e373584a79cff534c575" => :mavericks
+    sha1 "11dabc108585cb1468d7c5da64140522d42dd624" => :mountain_lion
+    sha1 "bae67562a1f7135faf534c3209ed887b73221bf5" => :lion
+  end
+
+  depends_on :arch => :x86_64
+  depends_on :python => :optional
+  depends_on 'openssl'
   depends_on 'readline'
-  depends_on 'libxml2' if MacOS.version == :leopard # Leopard libxml is too old
-  depends_on 'ossp-uuid' unless build.include? 'without-ossp-uuid'
+  depends_on 'libxml2' if MacOS.version <= :leopard # Leopard libxml is too old
+  depends_on 'ossp-uuid' => :recommended
 
   conflicts_with 'postgresql',
     :because => 'postgres-xc and postgresql install the same binaries.'
 
-  option 'without-ossp-uuid', 'Build without OSSP uuid'
-  option 'no-python', 'Build without Python support'
   option 'no-perl', 'Build without Perl support'
   option 'enable-dtrace', 'Build with DTrace support'
 
@@ -35,14 +29,15 @@ class PostgresXc < Formula
     cause 'Miscompilation resulting in segfault on queries'
   end
 
-  # Fix PL/Python build: https://github.com/mxcl/homebrew/issues/11162
+  # Fix PL/Python build: https://github.com/Homebrew/homebrew/issues/11162
   # Fix uuid-ossp build issues: http://archives.postgresql.org/pgsql-general/2012-07/msg00654.php
-  def patches
-    DATA
-  end
+  patch :DATA
 
   def install
     ENV.libxml2 if MacOS.version >= :snow_leopard
+
+    # See http://sourceforge.net/mailarchive/forum.php?thread_name=82E44F89-543A-44F2-8AF8-F6909B5DC561%40uniud.it&forum_name=postgres-xc-bugs
+    ENV.append 'CFLAGS', '-D_FORTIFY_SOURCE=0 -O2' if MacOS.version >= :mavericks
 
     args = ["--disable-debug",
             "--prefix=#{prefix}",
@@ -56,19 +51,19 @@ class PostgresXc < Formula
             "--with-libxml",
             "--with-libxslt"]
 
-    args << "--with-ossp-uuid" unless build.include? 'without-ossp-uuid'
-    args << "--with-python" unless build.include? 'no-python'
+    args << "--with-ossp-uuid" if build.with? 'ossp-uuid'
+    args << "--with-python" if build.with? 'python'
     args << "--with-perl" unless build.include? 'no-perl'
     args << "--enable-dtrace" if build.include? 'enable-dtrace'
     args << "ARCHFLAGS='-arch x86_64'"
 
-    unless build.include? 'without-ossp-uuid'
+    if build.with? 'ossp-uuid'
       ENV.append 'CFLAGS', `uuid-config --cflags`.strip
       ENV.append 'LDFLAGS', `uuid-config --ldflags`.strip
       ENV.append 'LIBS', `uuid-config --libs`.strip
     end
 
-    check_python_arch unless build.include? 'no-python'
+    check_python_arch if build.with? 'python'
 
     system "./configure", *args
     system "make install-world"
@@ -94,7 +89,7 @@ class PostgresXc < Formula
     unless (archs_for_command framework_python).include? :x86_64
       opoo "Detected a framework Python that does not have 64-bit support in:"
       puts <<-EOS.undent
-          #{framework_python}
+        #{framework_python}
 
         The configure script seems to prefer this version of Python over any others,
         so you may experience linker problems as described in:
@@ -177,7 +172,7 @@ class PostgresXc < Formula
       <string>#{plist_name(name)}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/bin/gtm</string>
+        <string>#{opt_bin}/gtm</string>
         <string>-D</string>
         <string>#{var}/postgres-xc/#{name}</string>
         <string>-l</string>
@@ -185,8 +180,6 @@ class PostgresXc < Formula
       </array>
       <key>RunAtLoad</key>
       <true/>
-      <key>UserName</key>
-      <string>#{`whoami`.chomp}</string>
       <key>WorkingDirectory</key>
       <string>#{HOMEBREW_PREFIX}</string>
       <key>StandardErrorPath</key>
@@ -207,7 +200,7 @@ class PostgresXc < Formula
       <string>#{plist_name(name)}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/bin/gtm_proxy</string>
+        <string>#{opt_bin}/gtm_proxy</string>
         <string>-D</string>
         <string>#{var}/postgres-xc/#{name}</string>
         <string>-n</string>
@@ -221,8 +214,6 @@ class PostgresXc < Formula
       </array>
       <key>RunAtLoad</key>
       <true/>
-      <key>UserName</key>
-      <string>#{`whoami`.chomp}</string>
       <key>WorkingDirectory</key>
       <string>#{HOMEBREW_PREFIX}</string>
       <key>StandardErrorPath</key>
@@ -243,7 +234,7 @@ class PostgresXc < Formula
       <string>#{plist_name(name)}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/bin/postgres</string>
+        <string>#{opt_bin}/postgres</string>
         <string>-i</string>
         <string>-C</string>
         <string>-D</string>
@@ -253,8 +244,6 @@ class PostgresXc < Formula
       </array>
       <key>RunAtLoad</key>
       <true/>
-      <key>UserName</key>
-      <string>#{`whoami`.chomp}</string>
       <key>WorkingDirectory</key>
       <string>#{HOMEBREW_PREFIX}</string>
       <key>StandardErrorPath</key>
@@ -275,7 +264,7 @@ class PostgresXc < Formula
       <string>#{plist_name(name)}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/bin/postgres</string>
+        <string>#{opt_bin}/postgres</string>
         <string>-i</string>
         <string>-X</string>
         <string>-D</string>
@@ -285,8 +274,6 @@ class PostgresXc < Formula
       </array>
       <key>RunAtLoad</key>
       <true/>
-      <key>UserName</key>
-      <string>#{`whoami`.chomp}</string>
       <key>WorkingDirectory</key>
       <string>#{HOMEBREW_PREFIX}</string>
       <key>StandardErrorPath</key>

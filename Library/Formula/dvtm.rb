@@ -2,8 +2,8 @@ require 'formula'
 
 class Dvtm < Formula
   homepage 'http://www.brain-dump.org/projects/dvtm/'
-  url 'http://www.brain-dump.org/projects/dvtm/dvtm-0.8.tar.gz'
-  sha1 '367fe528010a69c705cd046f63201c61086c14ec'
+  url 'http://www.brain-dump.org/projects/dvtm/dvtm-0.11.tar.gz'
+  sha1 'f82927afb88e3745dfed11fd39e5f6f9e956099e'
   head 'git://repo.or.cz/dvtm.git'
 
   def install

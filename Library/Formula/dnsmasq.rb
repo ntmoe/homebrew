@@ -2,12 +2,19 @@ require 'formula'
 
 class Dnsmasq < Formula
   homepage 'http://www.thekelleys.org.uk/dnsmasq/doc.html'
-  url 'http://www.thekelleys.org.uk/dnsmasq/dnsmasq-2.65.tar.gz'
-  sha256 'f5ddf3111b4ec372d0e07bcc036bbe3a4c5a1a68b60c2a1018102a0099bc0740'
+  url 'http://www.thekelleys.org.uk/dnsmasq/dnsmasq-2.71.tar.gz'
+  sha1 'b0a39f66557c966629a0ed9282cd87df8f409004'
+
+  bottle do
+    sha1 "96d2784aa36024ce06c727c323c211b0f278950f" => :mavericks
+    sha1 "ede61cf944079d566a059bd4638c75df22bc7057" => :mountain_lion
+    sha1 "a65ee0871fb0dd2d037d1742ca51d38f56005bb4" => :lion
+  end
 
   option 'with-idn', 'Compile with IDN support'
 
-  depends_on "libidn" if build.include? 'with-idn'
+  depends_on "libidn" if build.with? "idn"
+  depends_on 'pkg-config' => :build
 
   def install
     ENV.deparallelize
@@ -16,7 +23,7 @@ class Dnsmasq < Formula
     inreplace "src/config.h", "/etc/dnsmasq.conf", "#{etc}/dnsmasq.conf"
 
     # Optional IDN support
-    if build.include? 'with-idn'
+    if build.with? "idn"
       inreplace "src/config.h", "/* #define HAVE_IDN */", "#define HAVE_IDN"
     end
 
@@ -50,7 +57,7 @@ class Dnsmasq < Formula
         <string>#{plist_name}</string>
         <key>ProgramArguments</key>
         <array>
-          <string>#{opt_prefix}/sbin/dnsmasq</string>
+          <string>#{opt_sbin}/dnsmasq</string>
           <string>--keep-in-foreground</string>
         </array>
         <key>KeepAlive</key>

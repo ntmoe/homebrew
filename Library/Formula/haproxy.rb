@@ -2,13 +2,14 @@ require 'formula'
 
 class Haproxy < Formula
   homepage 'http://haproxy.1wt.eu'
-  url 'http://haproxy.1wt.eu/download/1.4/src/haproxy-1.4.22.tar.gz'
-  sha1 'ed8918c950bdb5b4b96d62c23073b7972443fe94'
+  url 'http://www.haproxy.org/download/1.5/src/haproxy-1.5.0.tar.gz'
+  sha1 'dc957d93871e4543d1850a144543bcaa26df37a0'
 
-  devel do
-    url 'http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5-dev17.tar.gz'
-    sha1 '0a11803fc7a1b313f56e5a989cbaad7cec6ddcf1'
-    version '1.5-dev17'
+  bottle do
+    cellar :any
+    sha1 "22967377181e7ead7e4a933be2744d7af697823e" => :mavericks
+    sha1 "2092512c8b99f7165cb7207059626bda6d966259" => :mountain_lion
+    sha1 "a99d9d7d867fd97df7b75b338b995d7be69fd8d1" => :lion
   end
 
   depends_on 'pcre'
@@ -17,12 +18,11 @@ class Haproxy < Formula
     args = ["TARGET=generic",
             "USE_KQUEUE=1",
             "USE_POLL=1",
-            "USE_PCRE=1"]
-
-    if build.devel?
-      args << "USE_OPENSSL=1"
-      args << "ADDLIB=-lcrypto"
-    end
+            "USE_PCRE=1",
+            "USE_OPENSSL=1",
+            "USE_ZLIB=1",
+            "ADDLIB=-lcrypto",
+    ]
 
     # We build generic since the Makefile.osx doesn't appear to work
     system "make", "CC=#{ENV.cc}", "CFLAGS=#{ENV.cflags}", "LDFLAGS=#{ENV.ldflags}", *args
